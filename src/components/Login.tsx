@@ -1,10 +1,12 @@
 import React from 'react';
 import './Login.css';
+import logo from '../assets/LOGO1.png';
 
 const Login: React.FC = () => {
   return (
     <div className="login-container">
       <div className="login-box">
+        <img src={logo} alt="TrackEdu Logo" className="logo" />
         <h2> TRACKEDU LOGIN </h2>
         <form>
           <div className="input-group">
