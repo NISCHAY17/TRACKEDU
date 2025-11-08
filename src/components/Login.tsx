@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase.ts';
+import { auth } from '../firebase';
 import './Login.css';
 import logo from '../assets/LOGO1.png';
 
@@ -18,8 +18,24 @@ const Login: React.FC = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/dashboard');
-    } catch {
-      setError("Invalid email or password");
+    } catch (err: any) {
+      console.error("Firebase Auth Error:", err.code, err.message);
+      switch (err.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          setError("Invalid email or password.");
+          break;
+        case 'auth/invalid-email':
+          setError("Please enter a valid email address.");
+          break;
+        case 'auth/network-request-failed':
+          setError("Network error. Please check your connection.");
+          break;
+        default:
+          setError("An unexpected error occurred. Please try again.");
+          break;
+      }
     }
   };
 

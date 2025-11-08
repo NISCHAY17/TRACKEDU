@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { ref, onValue, push, set, remove } from 'firebase/database';
+import { db, auth } from '../firebase';
+import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { Table, Button, Modal, TextInput, Group, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -17,6 +17,7 @@ export default function StudentManagement() {
   const [opened, setOpened] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const user = auth.currentUser;
 
   const form = useForm({
     initialValues: {
@@ -32,13 +33,14 @@ export default function StudentManagement() {
   });
 
   useEffect(() => {
-    const studentsRef = ref(db, 'students');
-    onValue(studentsRef, (snapshot) => {
-      const data = snapshot.val();
-      const studentList: Student[] = data ? Object.entries(data).map(([id, student]) => ({ id, ...(student as Omit<Student, 'id'>) })) : [];
+    if (!user) return;
+    const studentsCollection = collection(db, `users/${user.uid}/students`);
+    const unsubscribe = onSnapshot(studentsCollection, (snapshot) => {
+      const studentList: Student[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
       setStudents(studentList);
     });
-  }, []);
+    return unsubscribe;
+  }, [user]);
 
   const openModal = (student?: Student) => {
     if (student) {
@@ -53,31 +55,33 @@ export default function StudentManagement() {
     setOpened(true);
   };
 
-  const handleSubmit = (values: typeof form.values) => {
-    if (isEditing && selectedStudent) {
-      const studentRef = ref(db, `students/${selectedStudent.id}`);
-      set(studentRef, values)
-        .then(() => {
-          notifications.show({ title: 'Success', message: 'Student updated successfully', color: 'green' });
-          setOpened(false);
-        })
-        .catch(() => notifications.show({ title: 'Error', message: 'Failed to update student', color: 'red' }));
-    } else {
-      const studentsRef = ref(db, 'students');
-      push(studentsRef, values)
-        .then(() => {
-          notifications.show({ title: 'Success', message: 'Student added successfully', color: 'green' });
-          setOpened(false);
-        })
-        .catch(() => notifications.show({ title: 'Error', message: 'Failed to add student', color: 'red' }));
+  const handleSubmit = async (values: typeof form.values) => {
+    if (!user) return;
+    const studentsCollection = collection(db, `users/${user.uid}/students`);
+    try {
+      if (isEditing && selectedStudent) {
+        const studentDoc = doc(db, `users/${user.uid}/students`, selectedStudent.id);
+        await setDoc(studentDoc, values);
+        notifications.show({ title: 'Success', message: 'Student updated successfully', color: 'green' });
+      } else {
+        await addDoc(studentsCollection, values);
+        notifications.show({ title: 'Success', message: 'Student added successfully', color: 'green' });
+      }
+      setOpened(false);
+    } catch (error) {
+      notifications.show({ title: 'Error', message: 'Failed to save student', color: 'red' });
     }
   };
 
-  const handleDelete = (id: string) => {
-    const studentRef = ref(db, `students/${id}`);
-    remove(studentRef)
-      .then(() => notifications.show({ title: 'Success', message: 'Student deleted successfully', color: 'green' }))
-      .catch(() => notifications.show({ title: 'Error', message: 'Failed to delete student', color: 'red' }));
+  const handleDelete = async (id: string) => {
+    if (!user) return;
+    const studentDoc = doc(db, `users/${user.uid}/students`, id);
+    try {
+      await deleteDoc(studentDoc);
+      notifications.show({ title: 'Success', message: 'Student deleted successfully', color: 'green' });
+    } catch (error) {
+      notifications.show({ title: 'Error', message: 'Failed to delete student', color: 'red' });
+    }
   };
 
   const rows = students.map((student) => (

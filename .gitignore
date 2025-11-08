@@ -130,9 +130,13 @@ src/firebase.ts
 dist
 .vite
 
-# Gemini
+
 .GEMINI.md
 /home/user/trackedu/GEMINI.md
+.blueprint.md
+.DATABASE.md
+FILES/DATABASE.md
+FILES/blueprint.md
 
 
 .aiexclude
