@@ -123,6 +123,8 @@ dist
 src/firebase.js
 firebase-debug.log
 .firebase
+/home/user/trackedu/src/firebase.ts
+src/firebase.ts
 
 # Vite
 dist
@@ -131,3 +133,5 @@ dist
 # Gemini
 GEMINI.md
 /home/user/trackedu/GEMINI.md
+
+.aiexclude
