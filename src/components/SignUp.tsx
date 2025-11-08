@@ -1,40 +1,39 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase.ts';
-import './Login.css';
+import './SignUp.css';
 import logo from '../assets/LOGO1.png';
 
-const Login: React.FC = () => {
+const SignUp: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth, email, password);
       navigate('/dashboard');
-    } catch {
-      setError("Invalid email or password");
+    } catch (error: any) {
+      setError(error.message);
     }
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
+    <div className="signup-container">
+      <div className="signup-box">
         <img src={logo} alt="TrackEdu Logo" className="logo" />
-        <h2>TRACKEDU LOGIN</h2>
-        <form onSubmit={handleLogin}>
+        <h2>Create Account</h2>
+        <form onSubmit={handleSignUp}>
           <div className="input-group">
             <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
-              name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -45,21 +44,20 @@ const Login: React.FC = () => {
             <input
               type="password"
               id="password"
-              name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          <button type="submit" className="login-button">Login</button>
+          <button type="submit" className="signup-button">Sign Up</button>
           {error && <p style={{ color: '#ffcccb', marginTop: '1rem' }}>{error}</p>}
         </form>
         <p style={{ marginTop: '1rem', color: '#000000' }}>
-          Don't have an account? <Link to="/signup">Sign Up</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default SignUp;
