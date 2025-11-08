@@ -1,4 +1,3 @@
-
 import { AppShell, Title, NavLink, Burger, Group } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
@@ -6,10 +5,10 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { IconHome2, IconUsers, IconClipboardText } from '@tabler/icons-react';
+import StudentManagement from './StudentManagement';
 
 // Placeholder components for the different sections
 const DashboardHome = () => <Title>Dashboard Home</Title>;
-const StudentManagement = () => <Title>Student Management</Title>;
 const NoticeBoard = () => <Title>Notice Board</Title>;
 
 export default function Dashboard() {
