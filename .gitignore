@@ -131,7 +131,8 @@ dist
 .vite
 
 # Gemini
-GEMINI.md
+.GEMINI.md
 /home/user/trackedu/GEMINI.md
+
 
 .aiexclude
