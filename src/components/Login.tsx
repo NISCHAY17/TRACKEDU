@@ -18,7 +18,7 @@ const Login: React.FC = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/dashboard');
-    } catch (error: any) {
+    } catch {
       setError("Invalid email or password");
     }
   };
