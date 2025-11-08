@@ -7,7 +7,8 @@ All subsequent commits represent original development (UI, logic, integrations, 
 ---
 
 ## 📘 About
-TrackEdu ![LOGO](https://nidal-images.blr1.cdn.digitaloceanspaces.com/ASSETS/Red%20Modern%20Icons%20Internet%20Online%20Dating%20Logo%20(4).png) helps tutors & students manage courses, payments, and IDs —  
+![LOGO](https://nidal-images.blr1.cdn.digitaloceanspaces.com/ASSETS/Red%20Modern%20Icons%20Internet%20Online%20Dating%20Logo%20(4).png) 
+TrackEdu helps tutors & students manage courses, payments, and IDs —  
 part of the **NIDAL Open-Source Ecosystem**.
 
 ---
