@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { Table, Button, Modal, TextInput, Group, Title } from '@mantine/core';
+import { Table, Button, Modal, TextInput, Group, Title, Select } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 
@@ -10,6 +10,13 @@ interface Student {
   name: string;
   studentId: string;
   class: string;
+  phone: string;
+  email: string;
+}
+
+interface Class {
+  id: string;
+  name: string;
 }
 
 export default function StudentManagement() {
@@ -17,6 +24,7 @@ export default function StudentManagement() {
   const [opened, setOpened] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [availableClasses, setAvailableClasses] = useState<Class[]>([]);
   const user = auth.currentUser;
 
   const form = useForm({
@@ -24,6 +32,8 @@ export default function StudentManagement() {
       name: '',
       studentId: '',
       class: '',
+      phone: '',
+      email: ''
     },
     validate: {
       name: (value) => (value.length < 2 ? 'Name must have at least 2 letters' : null),
@@ -41,6 +51,17 @@ export default function StudentManagement() {
     });
     return unsubscribe;
   }, [user]);
+
+  // CORRECTED useEFFECT FOR CLASSES
+  useEffect(() => {
+    const classesCollection = collection(db, 'classes');
+    const unsubscribe = onSnapshot(classesCollection, (snapshot) => {
+      // Fixed the mapping to correctly get the class name
+      const classList: Class[] = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+      setAvailableClasses(classList);
+    });
+    return unsubscribe;
+  }, []);
 
   const openModal = (student?: Student) => {
     if (student) {
@@ -89,6 +110,8 @@ export default function StudentManagement() {
       <Table.Td>{student.name}</Table.Td>
       <Table.Td>{student.studentId}</Table.Td>
       <Table.Td>{student.class}</Table.Td>
+      <Table.Td>{student.phone}</Table.Td>
+      <Table.Td>{student.email}</Table.Td>
       <Table.Td>
         <Group>
           <Button size="xs" onClick={() => openModal(student)}>Edit</Button>
@@ -108,6 +131,8 @@ export default function StudentManagement() {
             <Table.Th>Name</Table.Th>
             <Table.Th>Student ID</Table.Th>
             <Table.Th>Class</Table.Th>
+            <Table.Th>Phone</Table.Th>
+            <Table.Th>Email</Table.Th>
             <Table.Th>Actions</Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -118,7 +143,19 @@ export default function StudentManagement() {
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <TextInput label="Name" {...form.getInputProps('name')} required />
           <TextInput label="Student ID" {...form.getInputProps('studentId')} required mt="md" />
-          <TextInput label="Class" {...form.getInputProps('class')} required mt="md" />
+          <Select
+            label="Class"
+            placeholder='Select Class'
+            data={availableClasses.map(cls => ({ value: cls.id, label: `${cls.id} (${cls.name})` }))}
+            {...form.getInputProps('class')}
+            required
+            mt='md'
+            />
+            <TextInput label="Phone" {...form.getInputProps('phone')} required mt="md" />
+            <TextInput label="Email" {...form.getInputProps('email')} required mt="md" />
+          <br />
+          <br />
+          {/* REMOVED the stray double-quote that was here */}
           <Button type="submit" mt="lg">{isEditing ? 'Update' : 'Add'} Student</Button>
         </form>
       </Modal>
