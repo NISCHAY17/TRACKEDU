@@ -1,13 +1,10 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { Table, Button, Modal, TextInput, Group, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
 
-// Mock data for now
-const mockClasses = [
-  { id: '1', name: 'Batch A', teacher: 'Mr. Smith' },
-  { id: '2', name: 'Batch B', teacher: 'Ms. Jones' },
-  { id: '3', name: 'Batch C', teacher: 'Mr. Davis' },
-];
+import { collection, onSnapshot , addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore' ;
+import { db } from '../firebase';
+// attempt to make db work with classe
 
 interface Class {
   id: string;
@@ -16,7 +13,7 @@ interface Class {
 }
 
 export default function ClassManagement() {
-  const [classes, setClasses] = useState<Class[]>(mockClasses);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [opened, setOpened] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
@@ -27,6 +24,21 @@ export default function ClassManagement() {
       teacher: '',
     },
   });
+
+
+useEffect(() => {
+  const classesCollection = collection(db, 'classes');
+
+  const unsubscribe = onSnapshot(classesCollection, (snapshot) => { 
+    const classlist = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+      } as Class));
+    setClasses(classlist);
+  });
+  return unsubscribe;
+}, []);
+
 
   const openModal = (cls?: Class) => {
     if (cls) {
@@ -41,19 +53,27 @@ export default function ClassManagement() {
     setOpened(true);
   };
 
-  const handleSubmit = (values: typeof form.values) => {
-    // This will be connected to Firestore later
-    if (isEditing && selectedClass) {
-      setClasses(classes.map(c => c.id === selectedClass.id ? { ...c, ...values } : c));
-    } else {
-      setClasses([...classes, { id: (classes.length + 1).toString(), ...values }]);
-    }
+  const handleSubmit = async (values: typeof form.values) => {
+    try { 
+      if (isEditing && selectedClass) {
+        const classDoc = doc(db, 'classes', selectedClass.id);
+        await setDoc(classDoc, values);
+      } else {
+        await addDoc(collection(db, 'classes'), values);
+      } 
+    } catch (error) {
+      console.error('Error adding class:', error);
+    } 
     setOpened(false);
-  };
+    };
 
-  const handleDelete = (id: string) => {
-    // This will be connected to Firestore later
-    setClasses(classes.filter(c => c.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      const classDoc = doc(db,'classes', id);
+      await deleteDoc(classDoc);
+    } catch (error) {
+      console.error('Error deleting class:', error);
+    }
   };
 
   const rows = classes.map((cls) => (
