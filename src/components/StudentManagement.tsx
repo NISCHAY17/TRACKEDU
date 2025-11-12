@@ -170,6 +170,7 @@ export default function StudentManagement() {
               <DatePickerInput
                 label="Date of Birth"
                 placeholder="Select a date"
+                popoverProps={{ withinPortal: true }}
                 {...form.getInputProps('dob')}
                 mt="md"
               />
