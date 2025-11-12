@@ -4,14 +4,16 @@ import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase
 import { Table, Button, Modal, TextInput, Group, Title, Select } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
+import { DatePickerInput } from '@mantine/dates';
 
 interface Student {
   id: string;
   name: string;
   studentId: string;
   class: string;
-  phone: string;
-  email: string;
+  phone?: string;
+  email?: string;
+  dob?: Date | null;
 }
 
 interface Class {
@@ -27,13 +29,21 @@ export default function StudentManagement() {
   const [availableClasses, setAvailableClasses] = useState<Class[]>([]);
   const user = auth.currentUser;
 
-  const form = useForm({
+  const form = useForm<{
+    name: string;
+    studentId: string;
+    class: string;
+    phone: string;
+    email: string;
+    dob: Date | null;
+  }>({ 
     initialValues: {
       name: '',
       studentId: '',
       class: '',
       phone: '',
-      email: ''
+      email: '',
+      dob: null,
     },
     validate: {
       name: (value) => (value.length < 2 ? 'Name must have at least 2 letters' : null),
@@ -46,17 +56,22 @@ export default function StudentManagement() {
     if (!user) return;
     const studentsCollection = collection(db, `users/${user.uid}/students`);
     const unsubscribe = onSnapshot(studentsCollection, (snapshot) => {
-      const studentList: Student[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student));
+      const studentList: Student[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          dob: data.dob && data.dob.toDate ? data.dob.toDate() : null,
+        } as Student;
+      });
       setStudents(studentList);
     });
     return unsubscribe;
   }, [user]);
 
-  // CORRECTED useEFFECT FOR CLASSES
   useEffect(() => {
     const classesCollection = collection(db, 'classes');
     const unsubscribe = onSnapshot(classesCollection, (snapshot) => {
-      // Fixed the mapping to correctly get the class name
       const classList: Class[] = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
       setAvailableClasses(classList);
     });
@@ -80,16 +95,18 @@ export default function StudentManagement() {
     if (!user) return;
     const studentsCollection = collection(db, `users/${user.uid}/students`);
     try {
+      const submissionValues = { ...values };
       if (isEditing && selectedStudent) {
         const studentDoc = doc(db, `users/${user.uid}/students`, selectedStudent.id);
-        await setDoc(studentDoc, values);
+        await setDoc(studentDoc, submissionValues);
         notifications.show({ title: 'Success', message: 'Student updated successfully', color: 'green' });
       } else {
-        await addDoc(studentsCollection, values);
+        await addDoc(studentsCollection, submissionValues);
         notifications.show({ title: 'Success', message: 'Student added successfully', color: 'green' });
       }
       setOpened(false);
     } catch (error) {
+      console.error("Error saving student: ", error);
       notifications.show({ title: 'Error', message: 'Failed to save student', color: 'red' });
     }
   };
@@ -110,8 +127,6 @@ export default function StudentManagement() {
       <Table.Td>{student.name}</Table.Td>
       <Table.Td>{student.studentId}</Table.Td>
       <Table.Td>{student.class}</Table.Td>
-      <Table.Td>{student.phone}</Table.Td>
-      <Table.Td>{student.email}</Table.Td>
       <Table.Td>
         <Group>
           <Button size="xs" onClick={() => openModal(student)}>Edit</Button>
@@ -131,8 +146,6 @@ export default function StudentManagement() {
             <Table.Th>Name</Table.Th>
             <Table.Th>Student ID</Table.Th>
             <Table.Th>Class</Table.Th>
-            <Table.Th>Phone</Table.Th>
-            <Table.Th>Email</Table.Th>
             <Table.Th>Actions</Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -150,12 +163,21 @@ export default function StudentManagement() {
             {...form.getInputProps('class')}
             required
             mt='md'
-            />
-            <TextInput label="Phone" {...form.getInputProps('phone')} required mt="md" />
-            <TextInput label="Email" {...form.getInputProps('email')} required mt="md" />
-          <br />
-          <br />
-          {/* REMOVED the stray double-quote that was here */}
+          />
+            
+          {isEditing && (
+            <>
+              <DatePickerInput
+                label="Date of Birth"
+                placeholder="Select a date"
+                {...form.getInputProps('dob')}
+                mt="md"
+              />
+              <TextInput label="Phone" {...form.getInputProps('phone')} mt="md" />
+              <TextInput label="Email" {...form.getInputProps('email')} mt="md" />
+            </>
+          )}
+
           <Button type="submit" mt="lg">{isEditing ? 'Update' : 'Add'} Student</Button>
         </form>
       </Modal>
