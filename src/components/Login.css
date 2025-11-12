@@ -20,7 +20,7 @@
   border-radius: 20px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
   width: 90%;
-  max-width: 360px; /* Reduced max-width for a smaller login box */
+  max-width: 360px; 
   text-align: center;
   position: relative;
 }
@@ -48,7 +48,7 @@
 }
 
 .logo {
-  width: 200px; /* Reduced logo size */
+  width: 200px; 
   height: 200px;
   object-fit: contain;
   margin-bottom: -3.5rem;
