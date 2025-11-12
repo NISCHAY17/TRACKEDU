@@ -1,13 +1,14 @@
+
 import { AppShell, Title, NavLink, Burger, Group } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { IconHome2, IconUsers, IconClipboardText } from '@tabler/icons-react';
+import { IconHome2, IconUsers, IconClipboardText, IconSchool } from '@tabler/icons-react'; 
 import StudentManagement from './StudentManagement';
+import ClassManagement from './ClassManagement'; 
 
-// Placeholder components for the different sections
 const DashboardHome = () => <Title>Dashboard Home</Title>;
 const NoticeBoard = () => <Title>Notice Board</Title>;
 
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const navLinks = [
     { icon: IconHome2, label: 'Dashboard', path: '/dashboard' },
     { icon: IconUsers, label: 'Students', path: '/dashboard/students' },
+    { icon: IconSchool, label: 'Classes', path: '/dashboard/classes' }, // Added Classes link
     { icon: IconClipboardText, label: 'Notice Board', path: '/dashboard/notice-board' },
   ];
 
@@ -63,6 +65,7 @@ export default function Dashboard() {
         <Routes>
           <Route path="/" element={<DashboardHome />} />
           <Route path="/students" element={<StudentManagement />} />
+          <Route path="/classes" element={<ClassManagement />} /> 
           <Route path="/notice-board" element={<NoticeBoard />} />
         </Routes>
       </AppShell.Main>
