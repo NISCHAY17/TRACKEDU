@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
 import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { Table, Button, Modal, TextInput, Group, Title, Select } from '@mantine/core';
+import { Table, Button, Modal, TextInput, Group, Title, Select, ActionIcon } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { DatePickerInput } from '@mantine/dates';
+import  { IconTrash, IconEye } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Student {
   id: string;
@@ -28,6 +30,7 @@ export default function StudentManagement() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [availableClasses, setAvailableClasses] = useState<Class[]>([]);
   const user = auth.currentUser;
+  const navigate = useNavigate();
 
   const form = useForm<{
     name: string;
@@ -129,8 +132,8 @@ export default function StudentManagement() {
       <Table.Td>{student.class}</Table.Td>
       <Table.Td>
         <Group>
-          <Button size="xs" onClick={() => openModal(student)}>Edit</Button>
-          <Button size="xs" color="red" onClick={() => handleDelete(student.id)}>Delete</Button>
+          <Button variant="light" size="xs" leftSection={<IconEye size={14}/>} onClick={() => navigate(`/students/${student.id}`)}>View</Button>
+          <ActionIcon color="red" size="xs" leftSection={<IconTrash size={14}/>} onClick={() => handleDelete(student.id)}>Delete</ActionIcon>
         </Group>
       </Table.Td>
     </Table.Tr>
