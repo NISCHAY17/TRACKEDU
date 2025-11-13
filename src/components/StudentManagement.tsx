@@ -133,7 +133,6 @@ export default function StudentManagement() {
       <Table.Td>
         <Group>
           <Button variant="light" size="xs" leftSection={<IconEye size={14}/>} onClick={() => navigate(`/students/${student.id}`)}>View</Button>
-          <ActionIcon color="red" size="xs" leftSection={<IconTrash size={14}/>} onClick={() => handleDelete(student.id)}>Delete</ActionIcon>
         </Group>
       </Table.Td>
     </Table.Tr>

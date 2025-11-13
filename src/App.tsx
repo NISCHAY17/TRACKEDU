@@ -1,7 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
-import StudentManagement from './components/StudentManagement';
-import StudentDetailView from './pages/StudentDetailView';
-import SignIn from './components/SignUp';
+import Dashboard from './components/Dashboard';
+import Login from './components/Login';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from './firebase';
 import { Loader, Center } from '@mantine/core';
@@ -20,12 +19,9 @@ export default function App() {
   return (
     <Routes>
       {user ? (
-        <>
-          <Route path="/" element={<StudentManagement />} />
-          <Route path="/students/:id" element={<StudentDetailView />} />
-        </>
+        <Route path="/*" element={<Dashboard />} />
       ) : (
-        <Route path="*" element={<SignIn />} />
+        <Route path="*" element={<Login />} />
       )}
     </Routes>
   );

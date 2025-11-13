@@ -1,25 +1,25 @@
 import { AppShell, Title, NavLink, Burger, Group } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { IconHome2, IconUsers, IconClipboardText, IconSchool, IconSettings } from '@tabler/icons-react'; 
+import { Routes, Route, Link, useLocation, Outlet } from 'react-router-dom';
+import { IconHome2, IconUsers, IconClipboardText, IconSchool, IconSettings } from '@tabler/icons-react';
 import StudentManagement from './StudentManagement';
 import ClassManagement from './ClassManagement';
 import Settings from './Settings';
+import StudentDetailView from '../pages/StudentDetailView'; 
 
-const DashboardHome = () => <Title>Dashboard Home</Title>;
+const DashboardHome = () => <Title>Welcome to TrackEdu</Title>;
 const NoticeBoard = () => <Title>Notice Board</Title>;
 
 export default function Dashboard() {
   const [opened, { toggle }] = useDisclosure();
   const location = useLocation();
 
-
   const navLinks = [
-    { icon: IconHome2, label: 'Dashboard', path: '/dashboard' },
-    { icon: IconUsers, label: 'Students', path: '/dashboard/students' },
-    { icon: IconSchool, label: 'Classes', path: '/dashboard/classes' },
-    { icon: IconClipboardText, label: 'Notice Board', path: '/dashboard/notice-board' },
-    { icon: IconSettings, label: 'Settings', path: '/dashboard/settings' },
+    { icon: IconHome2, label: 'Dashboard', path: '/' },
+    { icon: IconUsers, label: 'Students', path: '/students' },
+    { icon: IconSchool, label: 'Classes', path: '/classes' },
+    { icon: IconClipboardText, label: 'Notice Board', path: '/notice-board' },
+    { icon: IconSettings, label: 'Settings', path: '/settings' },
   ];
 
   return (
@@ -43,8 +43,8 @@ export default function Dashboard() {
               label={link.label}
               leftSection={<link.icon size={16} />}
               component={Link}
-              to={link.path}
-              active={location.pathname.startsWith(link.path)}
+              to={link.path} // Link to the correct, simple path
+              active={location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path))}
               onClick={toggle}
             />
           ))}
@@ -55,7 +55,8 @@ export default function Dashboard() {
         <Routes>
           <Route path="/" element={<DashboardHome />} />
           <Route path="/students" element={<StudentManagement />} />
-          <Route path="/classes" element={<ClassManagement />} /> 
+          <Route path="/students/:id" element={<StudentDetailView />} /> 
+          <Route path="/classes" element={<ClassManagement />} />
           <Route path="/notice-board" element={<NoticeBoard />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
