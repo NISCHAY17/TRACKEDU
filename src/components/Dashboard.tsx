@@ -43,7 +43,7 @@ export default function Dashboard() {
               label={link.label}
               leftSection={<link.icon size={16} />}
               component={Link}
-              to={link.path} // Link to the correct, simple path
+              to={link.path} 
               active={location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path))}
               onClick={toggle}
             />

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { notifications } from '@mantine/notifications';
-import { Container, Card, Title, Text, Button, Group, Paper, Avatar, Divider, Loader, Alert, Modal, TextInput, Select } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
+import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { Table, Button, Modal, TextInput, Group, Title, Select, ActionIcon } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconArrowLeft, IconPhone, IconMail, IconCake, IconPencil } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
+import { DatePickerInput } from '@mantine/dates';
+import  { IconTrash, IconEye } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Student {
   id: string;
@@ -15,155 +15,175 @@ interface Student {
   class: string;
   phone?: string;
   email?: string;
-  dob?: { toDate: () => Date } | null;
+  dob?: Date | null;
 }
 
-export default function StudentDetailView() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [student, setStudent] = useState<Student | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const user = auth.currentUser;
+interface Class {
+  id: string;
+  name: string;
+}
 
-  const form = useForm({
+export default function StudentManagement() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [opened, setOpened] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [availableClasses, setAvailableClasses] = useState<Class[]>([]);
+  const user = auth.currentUser;
+  const navigate = useNavigate();
+
+  const form = useForm<{
+    name: string;
+    studentId: string;
+    class: string;
+    phone: string;
+    email: string;
+    dob: Date | null;
+  }>({ 
     initialValues: {
       name: '',
       studentId: '',
       class: '',
-      email: '',
       phone: '',
-      dob: null as Date | null,
+      email: '',
+      dob: null,
+    },
+    validate: {
+      name: (value) => (value.length < 2 ? 'Name must have at least 2 letters' : null),
+      studentId: (value) => (value.length < 2 ? 'Student ID must have at least 2 characters' : null),
+      class: (value) => (value.length < 1 ? 'Class is required' : null),
     },
   });
 
-  const fetchStudent = async () => {
-    if (!user || !id) {
-      setError('User not found or student ID is missing.');
-      setLoading(false);
-      return;
-    }
-    try {
-      const studentDocRef = doc(db, `users/${user.uid}/students`, id);
-      const studentDoc = await getDoc(studentDocRef);
-
-      if (studentDoc.exists()) {
-        const studentData = { id: studentDoc.id, ...studentDoc.data() } as Student;
-        setStudent(studentData);
-        form.setValues({
-          name: studentData.name,
-          studentId: studentData.studentId,
-          class: studentData.class,
-          email: studentData.email || '',
-          phone: studentData.phone || '',
-          dob: studentData.dob?.toDate() || null,
-        });
-      } else {
-        setError('Student not found.');
-      }
-    } catch (err) {
-      console.error("Error fetching student: ", err);
-      setError('Failed to fetch student data.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (!user) return;
+    const studentsCollection = collection(db, `users/${user.uid}/students`);
+    const unsubscribe = onSnapshot(studentsCollection, (snapshot) => {
+      const studentList: Student[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          dob: data.dob && data.dob.toDate ? data.dob.toDate() : null,
+        } as Student;
+      });
+      setStudents(studentList);
+    });
+    return unsubscribe;
+  }, [user]);
 
   useEffect(() => {
-    fetchStudent();
-  }, [id, user]);
+    const classesCollection = collection(db, 'classes');
+    const unsubscribe = onSnapshot(classesCollection, (snapshot) => {
+      const classList: Class[] = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+      setAvailableClasses(classList);
+    });
+    return unsubscribe;
+  }, []);
 
-  const handleUpdateStudent = async (values: typeof form.values) => {
-    if (!user || !student) return;
+  const openModal = (student?: Student) => {
+    if (student) {
+      setIsEditing(true);
+      setSelectedStudent(student);
+      form.setValues(student);
+    } else {
+      setIsEditing(false);
+      setSelectedStudent(null);
+      form.reset();
+    }
+    setOpened(true);
+  };
 
-    const studentDocRef = doc(db, `users/${user.uid}/students`, student.id);
-
+  const handleSubmit = async (values: typeof form.values) => {
+    if (!user) return;
+    const studentsCollection = collection(db, `users/${user.uid}/students`);
     try {
-      await updateDoc(studentDocRef, {
-        ...values,
-        dob: values.dob ? new Date(values.dob) : null,
-      });
-      notifications.show({
-        title: 'Success',
-        message: 'Student details updated successfully!',
-        color: 'green',
-      });
-      setEditModalOpen(false);
-      fetchStudent(); 
+      const submissionValues = { ...values };
+      if (isEditing && selectedStudent) {
+        const studentDoc = doc(db, `users/${user.uid}/students`, selectedStudent.id);
+        await setDoc(studentDoc, submissionValues);
+        notifications.show({ title: 'Success', message: 'Student updated successfully', color: 'green' });
+      } else {
+        await addDoc(studentsCollection, submissionValues);
+        notifications.show({ title: 'Success', message: 'Student added successfully', color: 'green' });
+      }
+      setOpened(false);
     } catch (error) {
-      console.error('Error updating student: ', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to update student details.',
-        color: 'red',
-      });
+      console.error("Error saving student: ", error);
+      notifications.show({ title: 'Error', message: 'Failed to save student', color: 'red' });
     }
   };
 
-  if (loading) {
-    return <Container style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Loader /></Container>;
-  }
+  const handleDelete = async (id: string) => {
+    if (!user) return;
+    const studentDoc = doc(db, `users/${user.uid}/students`, id);
+    try {
+      await deleteDoc(studentDoc);
+      notifications.show({ title: 'Success', message: 'Student deleted successfully', color: 'green' });
+    } catch (error) {
+      notifications.show({ title: 'Error', message: 'Failed to delete student', color: 'red' });
+    }
+  };
 
-  if (error) {
-    return <Container mt="lg"><Alert color="red" title="Error">{error}</Alert></Container>;
-  }
-
-  const studentNameInitial = student?.name ? student.name.charAt(0).toUpperCase() : '?';
-  const dob = student?.dob?.toDate ? student.dob.toDate().toLocaleDateString() : 'Not specified';
+  const rows = students.map((student) => (
+    <Table.Tr key={student.id}>
+      <Table.Td>{student.name}</Table.Td>
+      <Table.Td>{student.studentId}</Table.Td>
+      <Table.Td>{student.class}</Table.Td>
+      <Table.Td>
+        <Group>
+          <Button variant="light" size="xs" leftSection={<IconEye size={14}/>} onClick={() => navigate(`/students/${student.id}`)}>View</Button>
+        </Group>
+      </Table.Td>
+    </Table.Tr>
+  ));
 
   return (
-    <Container mt="lg">
-      <Button variant="light" leftSection={<IconArrowLeft size={14} />} onClick={() => navigate(-1)} mb="lg">
-        Back to Student List
-      </Button>
-      <Paper shadow="md" p="xl" radius="md">
-        <Group justify="space-between">
-          <Group>
-            <Avatar color="blue" size="xl" radius="50%">
-              {studentNameInitial}
-            </Avatar>
-            <div>
-              <Title order={1}>{student?.name}</Title>
-              <Text c="dimmed">Student ID: {student?.studentId}</Text>
-              <Text c="dimmed">Class: {student?.class}</Text>
-            </div>
-          </Group>
-          <Button leftSection={<IconPencil size={14}/>} onClick={() => setEditModalOpen(true)}>Edit</Button>
-        </Group>
+    <>
+      <Title order={2} mb="lg">Student Management</Title>
+      <Button onClick={() => openModal()} mb="lg">Add Student</Button>
+      <Table withTableBorder withColumnBorders>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Name</Table.Th>
+            <Table.Th>Student ID</Table.Th>
+            <Table.Th>Class</Table.Th>
+            <Table.Th>Actions</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>{rows}</Table.Tbody>
+      </Table>
 
-        <Divider my="xl" />
-
-        <Title order={3} mb="md">Contact Information</Title>  
-        <Group>
-          <IconMail size={20} />
-          <Text>{student?.email || 'Not specified'}</Text>
-        </Group>
-        <Group mt="sm">
-          <IconPhone size={20} />
-          <Text>{student?.phone || 'Not specified'}</Text>
-        </Group>
-        <Group mt="sm">
-            <IconCake size={20} />
-            <Text>Birthday: {dob}</Text>
-        </Group>
-
-      </Paper>
-
-      <Modal opened={isEditModalOpen} onClose={() => setEditModalOpen(false)} title="Edit Student Details">
-        <form onSubmit={form.onSubmit(handleUpdateStudent)}>
+      <Modal opened={opened} onClose={() => setOpened(false)} title={isEditing ? 'Edit Student' : 'Add Student'}>
+        <form onSubmit={form.onSubmit(handleSubmit)}>
           <TextInput label="Name" {...form.getInputProps('name')} required />
-          <TextInput label="Student ID" {...form.getInputProps('studentId')} required />
-           <TextInput label="Class" {...form.getInputProps('class')} required />
-          <TextInput label="Email" type="email" {...form.getInputProps('email')} />
-          <TextInput label="Phone" {...form.getInputProps('phone')} />
-          <DatePickerInput label="Date of Birth" {...form.getInputProps('dob')} />
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={() => setEditModalOpen(false)}>Cancel</Button>
-            <Button type="submit">Update Student</Button>
-          </Group>
+          <TextInput label="Student ID" {...form.getInputProps('studentId')} required mt="md" />
+          <Select
+            label="Class"
+            placeholder='Select Class'
+            data={availableClasses.map(cls => ({ value: cls.id, label: `${cls.id} (${cls.name})` }))}
+            {...form.getInputProps('class')}
+            required
+            mt='md'
+          />
+            
+          {isEditing && (
+            <>
+              <DatePickerInput
+                label="Date of Birth"
+                placeholder="Select a date"
+                popoverProps={{ withinPortal: true }}
+                {...form.getInputProps('dob')}
+                mt="md"
+              />
+              <TextInput label="Phone" {...form.getInputProps('phone')} mt="md" />
+              <TextInput label="Email" {...form.getInputProps('email')} mt="md" />
+            </>
+          )}
+
+          <Button type="submit" mt="lg">{isEditing ? 'Update' : 'Add'} Student</Button>
         </form>
       </Modal>
-    </Container>
+    </>
   );
 }
