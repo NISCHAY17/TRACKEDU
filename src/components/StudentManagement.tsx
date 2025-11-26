@@ -52,6 +52,7 @@ export default function StudentManagement() {
       name: (value) => (value.length < 2 ? 'Name must have at least 2 letters' : null),
       studentId: (value) => (value.length < 2 ? 'Student ID must have at least 2 characters' : null),
       class: (value) => (value.length < 1 ? 'Class is required' : null),
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
     },
   });
 
@@ -73,13 +74,14 @@ export default function StudentManagement() {
   }, [user]);
 
   useEffect(() => {
-    const classesCollection = collection(db, 'classes');
+    if (!user) return;
+    const classesCollection = collection(db, `users/${user.uid}/classes`);
     const unsubscribe = onSnapshot(classesCollection, (snapshot) => {
       const classList: Class[] = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
       setAvailableClasses(classList);
     });
     return unsubscribe;
-  }, []);
+  }, [user]);
 
   const openModal = (student?: Student) => {
     if (student) {
@@ -132,7 +134,8 @@ export default function StudentManagement() {
       <Table.Td>{student.class}</Table.Td>
       <Table.Td>
         <Group>
-          <Button variant="light" size="xs" leftSection={<IconEye size={14}/>} onClick={() => navigate(`/students/${student.id}`)}>View</Button>
+          <ActionIcon variant="light" onClick={() => navigate(`/students/${student.id}`)}><IconEye size={16} /></ActionIcon>
+          <ActionIcon variant="light" color="red" onClick={() => handleDelete(student.id)}><IconTrash size={16} /></ActionIcon>
         </Group>
       </Table.Td>
     </Table.Tr>
@@ -161,25 +164,20 @@ export default function StudentManagement() {
           <Select
             label="Class"
             placeholder='Select Class'
-            data={availableClasses.map(cls => ({ value: cls.id, label: `${cls.id} (${cls.name})` }))}
+            data={availableClasses.map(cls => ({ value: cls.id, label: `${cls.name}` }))}
             {...form.getInputProps('class')}
             required
             mt='md'
           />
-            
-          {isEditing && (
-            <>
-              <DatePickerInput
-                label="Date of Birth"
-                placeholder="Select a date"
-                popoverProps={{ withinPortal: true }}
-                {...form.getInputProps('dob')}
-                mt="md"
-              />
-              <TextInput label="Phone" {...form.getInputProps('phone')} mt="md" />
-              <TextInput label="Email" {...form.getInputProps('email')} mt="md" />
-            </>
-          )}
+          <DatePickerInput
+            label="Date of Birth"
+            placeholder="Select a date"
+            popoverProps={{ withinPortal: true }}
+            {...form.getInputProps('dob')}
+            mt="md"
+          />
+          <TextInput label="Phone" {...form.getInputProps('phone')} mt="md" />
+          <TextInput label="Email" {...form.getInputProps('email')} mt="md" />
 
           <Button type="submit" mt="lg">{isEditing ? 'Update' : 'Add'} Student</Button>
         </form>

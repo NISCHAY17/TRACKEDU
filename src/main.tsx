@@ -7,14 +7,15 @@ import App from './App';
 import './index.css';
 import './App.css';
 import '@mantine/core/styles.css';
-import '@mantine/dates/styles.css'; 
+import '@mantine/dates/styles.css';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MantineProvider withGlobalStyles withNormalizeCSS>
-      <BrowserRouter>
+    <BrowserRouter>
+      <MantineProvider withGlobalStyles withNormalizeCSS>
         <Notifications />
         <App />
-      </BrowserRouter>
-    </MantineProvider>
+      </MantineProvider>
+    </BrowserRouter>
   </StrictMode>
 );
