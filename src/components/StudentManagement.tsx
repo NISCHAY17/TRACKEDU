@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { db, auth } from '../firebase';
-import { collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Table, Button, Modal, TextInput, Group, Title, Select, ActionIcon } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { DatePickerInput } from '@mantine/dates';
-import  { IconTrash, IconEye } from '@tabler/icons-react';
+import { IconTrash, IconEye } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Student {
@@ -29,7 +29,6 @@ export default function StudentManagement() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [availableClasses, setAvailableClasses] = useState<Class[]>([]);
-  const user = auth.currentUser;
   const navigate = useNavigate();
 
   const form = useForm<{
@@ -39,7 +38,7 @@ export default function StudentManagement() {
     phone: string;
     email: string;
     dob: Date | null;
-  }>({ 
+  }>({
     initialValues: {
       name: '',
       studentId: '',
@@ -57,8 +56,7 @@ export default function StudentManagement() {
   });
 
   useEffect(() => {
-    if (!user) return;
-    const studentsCollection = collection(db, `users/${user.uid}/students`);
+    const studentsCollection = collection(db, 'students');
     const unsubscribe = onSnapshot(studentsCollection, (snapshot) => {
       const studentList: Student[] = snapshot.docs.map(doc => {
         const data = doc.data();
@@ -71,17 +69,16 @@ export default function StudentManagement() {
       setStudents(studentList);
     });
     return unsubscribe;
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    if (!user) return;
-    const classesCollection = collection(db, `users/${user.uid}/classes`);
+    const classesCollection = collection(db, 'classes');
     const unsubscribe = onSnapshot(classesCollection, (snapshot) => {
       const classList: Class[] = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
       setAvailableClasses(classList);
     });
     return unsubscribe;
-  }, [user]);
+  }, []);
 
   const openModal = (student?: Student) => {
     if (student) {
@@ -97,28 +94,25 @@ export default function StudentManagement() {
   };
 
   const handleSubmit = async (values: typeof form.values) => {
-    if (!user) return;
-    const studentsCollection = collection(db, `users/${user.uid}/students`);
     try {
-      const submissionValues = { ...values };
       if (isEditing && selectedStudent) {
-        const studentDoc = doc(db, `users/${user.uid}/students`, selectedStudent.id);
-        await setDoc(studentDoc, submissionValues);
+        const studentDoc = doc(db, 'students', selectedStudent.id);
+        await updateDoc(studentDoc, values);
         notifications.show({ title: 'Success', message: 'Student updated successfully', color: 'green' });
       } else {
-        await addDoc(studentsCollection, submissionValues);
+        const studentsCollection = collection(db, 'students');
+        await addDoc(studentsCollection, values);
         notifications.show({ title: 'Success', message: 'Student added successfully', color: 'green' });
       }
       setOpened(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving student: ", error);
-      notifications.show({ title: 'Error', message: 'Failed to save student', color: 'red' });
+      notifications.show({ title: 'Error', message: `Failed to save student: ${error.message}`, color: 'red' });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!user) return;
-    const studentDoc = doc(db, `users/${user.uid}/students`, id);
+    const studentDoc = doc(db, 'students', id);
     try {
       await deleteDoc(studentDoc);
       notifications.show({ title: 'Success', message: 'Student deleted successfully', color: 'green' });
@@ -177,7 +171,7 @@ export default function StudentManagement() {
             mt="md"
           />
           <TextInput label="Phone" {...form.getInputProps('phone')} mt="md" />
-          <TextInput label="Email" {...form.getInputProps('email')} mt="md" />
+          <TextInput label="Email" {...form.getInputProps('email')} required mt="md" />
 
           <Button type="submit" mt="lg">{isEditing ? 'Update' : 'Add'} Student</Button>
         </form>
