@@ -1,8 +1,8 @@
-![Flag](public/flag-orpheus-top.png)
+<img src="public/flag-orpheus-top.png" width="300" alt="Flag" />
 
 # TrackEdu 🧠
 
-![Logo](public/LOGOPROB.png)
+<img src="public/LOGOPROB.png" width="100" alt="Logo" />
 
 **An open-source student management & tracking platform.**
 
