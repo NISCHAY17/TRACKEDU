@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, NavLink, Title, Center, Loader } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconHome, IconChalkboard, IconUsers, IconClipboardText, IconListDetails, IconSettings } from '@tabler/icons-react';
+import { IconHome, IconChalkboard, IconUsers, IconClipboardText, IconListDetails, IconSettings, IconSchool } from '@tabler/icons-react';
 import Dashboard from './components/Dashboard';
 import ClassManagement from './components/ClassManagement';
 import StudentManagement from './components/StudentManagement';
+import TeacherManagement from './components/TeacherManagement'; // Import TeacherManagement
 import StudentDetail from './pages/StudentDetailView';
 import ClassDetail from './pages/ClassDetailView'; 
 import Manage from './components/Manage';
@@ -27,6 +28,7 @@ function App() {
   const navLinks = [
     { icon: IconHome, label: 'Dashboard', path: '/' },
     { icon: IconChalkboard, label: 'Classes', path: '/classes' },
+    { icon: IconSchool, label: 'Teachers', path: '/teachers' }, // Added Teachers link
     { icon: IconUsers, label: 'Students', path: '/students' },
     { icon: IconClipboardText, label: 'Notice Board', path: '/notice-board' },
     { icon: IconListDetails, label: 'Manage', path: '/manage' },
@@ -72,6 +74,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/classes" element={<ClassManagement />} />
           <Route path="/classes/:id" element={<ClassDetail />} /> 
+          <Route path="/teachers" element={<TeacherManagement />} /> {/* Added Teachers route */}
           <Route path="/students" element={<StudentManagement />} />
           <Route path="/students/:id" element={<StudentDetail />} />
           <Route path="/manage" element={<Manage />} />

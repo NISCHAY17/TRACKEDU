@@ -13,6 +13,7 @@ import {
   Menu,
   Loader,
   Center,
+  Select,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -33,10 +34,16 @@ interface Student {
     class: string;
 }
 
+interface Teacher {
+    id: string;
+    name: string;
+}
+
 export default function ClassManagement() {
   const [user] = useAuthState(auth);
   const [classes, setClasses] = useState<Class[]>([]);
   const [studentsByClass, setStudentsByClass] = useState<Record<string, Student[]>>({});
+  const [teachers, setTeachers] = useState<Teacher[]>([]); // State for teachers
   const [opened, setOpened] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -51,7 +58,7 @@ export default function ClassManagement() {
     validate: {
       id: (value) => (value.trim().length > 0 ? null : 'Class ID is required'),
       name: (value) => (value.trim().length > 0 ? null : 'Class name is required'),
-      teacher: (value) => (value.trim().length > 0 ? null : 'Teacher name is required'),
+      teacher: (value) => (value.trim().length > 0 ? null : 'Teacher is required'),
     },
   });
 
@@ -65,6 +72,7 @@ export default function ClassManagement() {
 
     const classesCollection = collection(db, 'classes');
     const studentsCollection = collection(db, 'students');
+    const teachersCollection = collection(db, 'teachers'); // Reference to teachers
 
     const unsubscribeClasses = onSnapshot(classesCollection, (snapshot) => {
       const classList = snapshot.docs.map(doc => ({
@@ -100,10 +108,20 @@ export default function ClassManagement() {
         console.error("Error fetching students:", error);
     });
 
+    // Fetch teachers
+    const unsubscribeTeachers = onSnapshot(teachersCollection, (snapshot) => {
+        const teacherList = snapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().name
+        } as Teacher));
+        setTeachers(teacherList);
+    });
+
 
     return () => {
         unsubscribeClasses();
         unsubscribeStudents();
+        unsubscribeTeachers();
     };
   }, [user]);
 
@@ -150,7 +168,16 @@ export default function ClassManagement() {
             disabled={isEditing}
           />
           <TextInput label="Class Name" {...form.getInputProps('name')} required mt="md" />
-          <TextInput label="Teacher Name" {...form.getInputProps('teacher')} mt="md" required />
+          
+          <Select
+            label="Teacher"
+            placeholder="Select a teacher"
+            data={teachers.map(t => ({ value: t.name, label: t.name }))} 
+            {...form.getInputProps('teacher')}
+            required
+            mt="md"
+          />
+
           <Group justify="flex-end" mt="lg">
             <Button variant="default" onClick={() => setOpened(false)}>Cancel</Button>
             <Button type="submit">{isEditing ? 'Update' : 'Create'}</Button>
