@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, runTransaction } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, runTransaction, Timestamp } from 'firebase/firestore';
 import { Table, Button, Modal, TextInput, Group, Title, Select, ActionIcon, Anchor } from '@mantine/core';
 import { useForm, type FormErrors } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -48,7 +48,26 @@ export default function StudentManagement() {
   // Effects
   useEffect(() => {
     const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
-      const studentList: Student[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), dob: doc.data().dob?.toDate() } as Student));
+      const studentList: Student[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        let dob: Date | null = null;
+
+        // Robust date parsing
+        if (data.dob) {
+            if (typeof data.dob.toDate === 'function') {
+
+                dob = data.dob.toDate();
+            } else if (data.dob instanceof Date) {
+          
+                dob = data.dob;
+            } else if (typeof data.dob === 'string' || typeof data.dob === 'number') {
+          
+                dob = new Date(data.dob);
+            }
+        }
+
+        return { id: doc.id, ...data, dob } as Student;
+      });
       setStudents(studentList);
     });
     const unsubClasses = onSnapshot(collection(db, 'classes'), (snapshot) => {
@@ -89,7 +108,7 @@ export default function StudentManagement() {
   const handleSubmit = async (values: StudentFormValues) => {
     try {
       if (isEditing && selectedStudent) {
-        // Cast values to any to bypass the strict type check for updateDoc, as we know the structure is compatible
+        // Cast values to any to bypass strict type checking for updateDoc, as we know the structure is compatible
         await updateDoc(doc(db, 'students', selectedStudent.id), values as any);
         notifications.show({ title: 'Success', message: 'Student updated successfully', color: 'green' });
       } else {

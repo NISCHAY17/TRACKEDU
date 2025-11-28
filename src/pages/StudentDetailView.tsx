@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { notifications } from '@mantine/notifications';
-import { Container, Card, Title, Text, Button, Group, Paper, Avatar, Divider, Loader, Alert, Modal, TextInput, Select } from '@mantine/core';
+import { Container, Card, Title, Text, Button, Group, Paper, Avatar, Loader, Alert, Modal, TextInput, Tabs } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { IconArrowLeft, IconPhone, IconMail, IconCake, IconPencil } from '@tabler/icons-react';
+import { IconArrowLeft, IconPhone, IconMail, IconCake, IconPencil, IconUser, IconReceipt, IconCalendar } from '@tabler/icons-react';
+
 
 interface Student {
   id: string;
@@ -15,7 +16,7 @@ interface Student {
   class: string;
   phone?: string;
   email?: string;
-  dob?: { toDate: () => Date } | null;
+  dob?: Date | null;
 }
 
 export default function StudentDetailView() {
@@ -27,14 +28,21 @@ export default function StudentDetailView() {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const user = auth.currentUser;
 
-  const form = useForm({
+  const form = useForm<{
+    name: string;
+    studentId: string;
+    class: string;
+    email: string;
+    phone: string;
+    dob: Date | null;
+  }>({
     initialValues: {
       name: '',
       studentId: '',
       class: '',
       email: '',
       phone: '',
-      dob: null as Date | null,
+      dob: null,
     },
   });
 
@@ -45,11 +53,24 @@ export default function StudentDetailView() {
       return;
     }
     try {
-      const studentDocRef = doc(db, `users/${user.uid}/students`, id);
+      const studentDocRef = doc(db, 'students', id);
       const studentDoc = await getDoc(studentDocRef);
 
       if (studentDoc.exists()) {
-        const studentData = { id: studentDoc.id, ...studentDoc.data() } as Student;
+        const data = studentDoc.data();
+        let dob: Date | null = null;
+
+        if (data.dob) {
+            if (typeof data.dob.toDate === 'function') {
+                dob = data.dob.toDate();
+            } else if (data.dob instanceof Date) {
+                dob = data.dob;
+            } else if (typeof data.dob === 'string' || typeof data.dob === 'number') {
+                dob = new Date(data.dob);
+            }
+        }
+
+        const studentData = { id: studentDoc.id, ...data, dob } as Student;
         setStudent(studentData);
         form.setValues({
           name: studentData.name,
@@ -57,7 +78,7 @@ export default function StudentDetailView() {
           class: studentData.class,
           email: studentData.email || '',
           phone: studentData.phone || '',
-          dob: studentData.dob?.toDate() || null,
+          dob: dob,
         });
       } else {
         setError('Student not found.');
@@ -77,7 +98,7 @@ export default function StudentDetailView() {
   const handleUpdateStudent = async (values: typeof form.values) => {
     if (!user || !student) return;
 
-    const studentDocRef = doc(db, `users/${user.uid}/students`, student.id);
+    const studentDocRef = doc(db, 'students', student.id);
 
     try {
       await updateDoc(studentDocRef, {
@@ -110,7 +131,7 @@ export default function StudentDetailView() {
   }
 
   const studentNameInitial = student?.name ? student.name.charAt(0).toUpperCase() : '?';
-  const dob = student?.dob?.toDate ? student.dob.toDate().toLocaleDateString() : 'Not specified';
+  const dobString = student?.dob ? student.dob.toLocaleDateString() : 'Not specified';
 
   return (
     <Container mt="lg">
@@ -131,24 +152,43 @@ export default function StudentDetailView() {
           </Group>
           <Button leftSection={<IconPencil size={14}/>} onClick={() => setEditModalOpen(true)}>Edit</Button>
         </Group>
-
-        <Divider my="xl" />
-
-        <Title order={3} mb="md">Contact Information</Title>  
-        <Group>
-          <IconMail size={20} />
-          <Text>{student?.email || 'Not specified'}</Text>
-        </Group>
-        <Group mt="sm">
-          <IconPhone size={20} />
-          <Text>{student?.phone || 'Not specified'}</Text>
-        </Group>
-        <Group mt="sm">
-            <IconCake size={20} />
-            <Text>Birthday: {dob}</Text>
-        </Group>
-
       </Paper>
+      
+      <Tabs defaultValue="details" mt="lg">
+        <Tabs.List>
+          <Tabs.Tab value="details" leftSection={<IconUser size={14} />}>Details</Tabs.Tab>
+          <Tabs.Tab value="attendance" leftSection={<IconCalendar size={14} />}>Attendance</Tabs.Tab>
+          <Tabs.Tab value="fees" leftSection={<IconReceipt size={14} />}>Fees</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="details">
+            <Card withBorder mt="md">
+                <Title order={3} mb="md">Contact Information</Title>  
+                <Group>
+                  <IconMail size={20} />
+                  <Text>{student?.email || 'Not specified'}</Text>
+                </Group>
+                <Group mt="sm">
+                  <IconPhone size={20} />
+                  <Text>{student?.phone || 'Not specified'}</Text>
+                </Group>
+                <Group mt="sm">
+                    <IconCake size={20} />
+                    <Text>Birthday: {dobString}</Text>
+                </Group>
+            </Card>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="attendance">
+          {/* <Attendance /> */}
+          <Text mt="md">Attendance module.</Text>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="fees">
+          {/* <Fees /> */}
+          <Text mt="md">Fees module.</Text>
+        </Tabs.Panel>
+      </Tabs>
 
       <Modal opened={isEditModalOpen} onClose={() => setEditModalOpen(false)} title="Edit Student Details">
         <form onSubmit={form.onSubmit(handleUpdateStudent)}>
@@ -157,7 +197,7 @@ export default function StudentDetailView() {
            <TextInput label="Class" {...form.getInputProps('class')} required />
           <TextInput label="Email" type="email" {...form.getInputProps('email')} />
           <TextInput label="Phone" {...form.getInputProps('phone')} />
-          <DatePickerInput label="Date of Birth" {...form.getInputProps('dob')} />
+          <DatePickerInput label="Date of Birth" popoverProps={{ withinPortal: true }} {...form.getInputProps('dob')} />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setEditModalOpen(false)}>Cancel</Button>
             <Button type="submit">Update Student</Button>

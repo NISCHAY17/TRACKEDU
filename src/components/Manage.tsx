@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { Title, TextInput, NumberInput, Button, Paper, Group, Switch, Text } from '@mantine/core';
+import { Title, TextInput, NumberInput, Button, Paper, Group, Switch, Text, Accordion } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 
@@ -16,7 +16,7 @@ export default function Manage() {
     validate: (values) => {
       if (values.useScheme) {
         return {
-          prefix: values.prefix.trim() === '' ? 'Prefix is required' : null,
+          
           nextId: values.nextId < 1 ? 'Starting number must be at least 1' : null,
         };
       }
@@ -50,30 +50,51 @@ export default function Manage() {
 
   return (
     <>
-      <Title order={2} mb="lg">Manage Student ID Scheme</Title>
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={form.onSubmit(handleSubmit)}>
-          <Switch
-            label="Use automatic Student ID generation scheme"
-            checked={useScheme}
-            {...form.getInputProps('useScheme')}
-          />
+      <Title order={2} mb="lg">Manage</Title>
+      
+      {/*collapsed by default */}
+      <Accordion variant="separated" radius="md">
+        <Accordion.Item value="student-id-scheme">
+          <Accordion.Control>
+            <Title order={4}>Student ID Scheme</Title>
+          </Accordion.Control>
+          <Accordion.Panel>
+            <form onSubmit={form.onSubmit(handleSubmit)}>
+              <Switch
+                label="Use automatic Student ID generation scheme"
+                checked={useScheme}
+                {...form.getInputProps('useScheme')}
+                mb="md"
+              />
 
-          {useScheme && (
-            <>
-              <TextInput label="Student ID Prefix" placeholder="e.g., STU-" {...form.getInputProps('prefix')} mt="md" required />
-              <NumberInput label="Next Student ID Number" placeholder="e.g., 101" {...form.getInputProps('nextId')} mt="md" min={1} required />
-              <Text mt="sm" size="sm" c="dimmed">
-                Preview of next ID: {prefix}{nextId}
-              </Text>
-            </>
-          )}
+              {useScheme && (
+                <>
+                  <TextInput 
+                    label="Student ID Prefix" 
+                    placeholder="e.g., STU- (Optional)" 
+                    {...form.getInputProps('prefix')} 
+                  />
+                  <NumberInput 
+                    label="Next Student ID Number" 
+                    placeholder="e.g., 101" 
+                    {...form.getInputProps('nextId')} 
+                    mt="md" 
+                    min={1} 
+                    required 
+                  />
+                  <Text mt="sm" size="sm" c="dimmed">
+                    Preview of next ID: {prefix}{nextId}
+                  </Text>
+                </>
+              )}
 
-          <Group justify="flex-end" mt="lg">
-            <Button type="submit" loading={loading}>Save Scheme</Button>
-          </Group>
-        </form>
-      </Paper>
+              <Group justify="flex-end" mt="lg">
+                <Button type="submit" loading={loading}>Save Scheme</Button>
+              </Group>
+            </form>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
     </>
   );
 }
