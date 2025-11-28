@@ -37,7 +37,7 @@ export default function StudentAccount({ studentId }: StudentAccountProps) {
           console.warn("Fetching credentials timed out. Showing form.");
           setFetching(false);
         }
-      }, 3000); // 3 second timeout
+      }, 2000); // 2 second timeout
 
       try {
         const credentialsRef = ref(rtdb, `student_credentials/${studentId}`);
