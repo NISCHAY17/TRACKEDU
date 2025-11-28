@@ -1,3 +1,6 @@
 {
+  "firebase_hosting": {
+    "deploymentHostingUrl": "https://trackedu-f8110.web.app"
+  },
   "google_maps_platform": {}
 }

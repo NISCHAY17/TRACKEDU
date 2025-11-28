@@ -10,6 +10,18 @@ TrackEdu is a modern, single-tenant web application designed to help tutors and 
 
 ---
 
+## 🎮 Try the Demo
+
+Want to see it in action? Check out the live demo!
+
+🔗 **Website:** [https://trackedu-f8110.web.app/login](https://trackedu-f8110.web.app/login)
+
+**Demo Credentials:**
+*   **Email / ID:** `demo@trackedu.demo`
+*   **Password:** `demo@trackedu.demo`
+
+---
+
 ## 🚀 Key Features
 
 ### 🔐 Authentication & Security
