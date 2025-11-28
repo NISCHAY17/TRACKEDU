@@ -5,7 +5,7 @@ import { IconHome, IconChalkboard, IconUsers, IconClipboardText, IconListDetails
 import Dashboard from './components/Dashboard';
 import ClassManagement from './components/ClassManagement';
 import StudentManagement from './components/StudentManagement';
-import TeacherManagement from './components/TeacherManagement'; // Import TeacherManagement
+import TeacherManagement from './components/TeacherManagement'; 
 import StudentDetail from './pages/StudentDetailView';
 import ClassDetail from './pages/ClassDetailView'; 
 import Manage from './components/Manage';

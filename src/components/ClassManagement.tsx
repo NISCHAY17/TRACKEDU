@@ -43,7 +43,7 @@ export default function ClassManagement() {
   const [user] = useAuthState(auth);
   const [classes, setClasses] = useState<Class[]>([]);
   const [studentsByClass, setStudentsByClass] = useState<Record<string, Student[]>>({});
-  const [teachers, setTeachers] = useState<Teacher[]>([]); // State for teachers
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [opened, setOpened] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -72,7 +72,7 @@ export default function ClassManagement() {
 
     const classesCollection = collection(db, 'classes');
     const studentsCollection = collection(db, 'students');
-    const teachersCollection = collection(db, 'teachers'); // Reference to teachers
+    const teachersCollection = collection(db, 'teachers');
 
     const unsubscribeClasses = onSnapshot(classesCollection, (snapshot) => {
       const classList = snapshot.docs.map(doc => ({
@@ -108,7 +108,6 @@ export default function ClassManagement() {
         console.error("Error fetching students:", error);
     });
 
-    // Fetch teachers
     const unsubscribeTeachers = onSnapshot(teachersCollection, (snapshot) => {
         const teacherList = snapshot.docs.map(doc => ({
             id: doc.id,
@@ -172,7 +171,7 @@ export default function ClassManagement() {
           <Select
             label="Teacher"
             placeholder="Select a teacher"
-            data={teachers.map(t => ({ value: t.name, label: t.name }))} 
+            data={teachers.map(t => ({ value: t.name, label: t.name }))}
             {...form.getInputProps('teacher')}
             required
             mt="md"
@@ -185,46 +184,47 @@ export default function ClassManagement() {
         </form>
       </Modal>
 
-      <Accordion variant="separated">
+      <Accordion variant="separated" chevronPosition="left">
         {classes.map((cls) => {
             const classStudents = studentsByClass[cls.id] || [];
             return (
                 <Accordion.Item key={cls.id} value={cls.id}>
-                    <Accordion.Control>
-                        <Group justify="space-between">
+                    <Group wrap="nowrap" align="center" pr="md" style={{ width: '100%' }}>
+                        <Accordion.Control>
                             <Box>
                                 <Text fw={500}>{cls.name} <Text span c="dimmed" size="xs">({cls.id})</Text></Text>
                                 <Text size="sm" c="dimmed">Teacher: {cls.teacher}</Text>
                             </Box>
-                            <Group gap="xs">
-                                <Badge
-                                  leftSection={<IconUsers size={12} />}
-                                  variant="light"
-                                >
-                                  {classStudents.length} Students
-                                </Badge>
-                                <ActionIcon variant="subtle" onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/classes/${cls.id}`);
-                                }}>
-                                    <IconEye size={16} />
-                                </ActionIcon>
-                                <Menu shadow="md" width={200} withinPortal>
-                                    <Menu.Target>
-                                        <ActionIcon variant="subtle" onClick={(e) => e.stopPropagation()}><IconDotsVertical size={16} /></ActionIcon>
-                                    </Menu.Target>
-                                    <Menu.Dropdown>
-                                        <Menu.Item leftSection={<IconPencil size={14} />} onClick={() => openModal(cls)}>
-                                            Edit Class
-                                        </Menu.Item>
-                                        <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={() => handleDelete(cls.id)}>
-                                            Delete Class
-                                        </Menu.Item>
-                                    </Menu.Dropdown>
-                                </Menu>
-                            </Group>
+                        </Accordion.Control>
+                        
+                        <Group gap="xs" style={{ flexShrink: 0 }}>
+                            <Badge
+                                leftSection={<IconUsers size={12} />}
+                                variant="light"
+                            >
+                                {classStudents.length} Students
+                            </Badge>
+                            <ActionIcon variant="subtle" onClick={(e) => {
+                                navigate(`/classes/${cls.id}`);
+                            }}>
+                                <IconEye size={16} />
+                            </ActionIcon>
+                            <Menu shadow="md" width={200} withinPortal>
+                                <Menu.Target>
+                                    <ActionIcon variant="subtle"><IconDotsVertical size={16} /></ActionIcon>
+                                </Menu.Target>
+                                <Menu.Dropdown>
+                                    <Menu.Item leftSection={<IconPencil size={14} />} onClick={() => openModal(cls)}>
+                                        Edit Class
+                                    </Menu.Item>
+                                    <Menu.Item color="red" leftSection={<IconTrash size={14} />} onClick={() => handleDelete(cls.id)}>
+                                        Delete Class
+                                    </Menu.Item>
+                                </Menu.Dropdown>
+                            </Menu>
                         </Group>
-                    </Accordion.Control>
+                    </Group>
+
                     <Accordion.Panel>
                         {classStudents.length > 0 ? (
                             classStudents.map(student => (
