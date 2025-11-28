@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, NavLink, Title, Center, Loader } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconHome, IconChalkboard, IconUsers, IconClipboardText, IconListDetails, IconSettings, IconSchool } from '@tabler/icons-react';
@@ -14,6 +14,7 @@ import Login from './components/Login';
 import SignUp from './components/SignUp';
 import { auth } from './firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import logo from './assets/LOGO1.png'; 
 
 function App() {
   const [user, loading] = useAuthState(auth);
@@ -28,7 +29,7 @@ function App() {
   const navLinks = [
     { icon: IconHome, label: 'Dashboard', path: '/' },
     { icon: IconChalkboard, label: 'Classes', path: '/classes' },
-    { icon: IconSchool, label: 'Teachers', path: '/teachers' }, // Added Teachers link
+    { icon: IconSchool, label: 'Teachers', path: '/teachers' },
     { icon: IconUsers, label: 'Students', path: '/students' },
     { icon: IconClipboardText, label: 'Notice Board', path: '/notice-board' },
     { icon: IconListDetails, label: 'Manage', path: '/manage' },
@@ -49,6 +50,7 @@ function App() {
         <Group h="100%" px="md">
           <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
           <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
+          <img src={logo} alt="TrackEdu" style={{ height: 30 }} /> {/* Add logo image */}
           <Title order={3}>Admin Dashboard</Title>
         </Group>
       </AppShell.Header>
@@ -74,7 +76,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/classes" element={<ClassManagement />} />
           <Route path="/classes/:id" element={<ClassDetail />} /> 
-          <Route path="/teachers" element={<TeacherManagement />} /> {/* Added Teachers route */}
+          <Route path="/teachers" element={<TeacherManagement />} />
           <Route path="/students" element={<StudentManagement />} />
           <Route path="/students/:id" element={<StudentDetail />} />
           <Route path="/manage" element={<Manage />} />
