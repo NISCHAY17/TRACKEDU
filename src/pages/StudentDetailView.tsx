@@ -6,8 +6,8 @@ import { notifications } from '@mantine/notifications';
 import { Container, Card, Title, Text, Button, Group, Paper, Avatar, Loader, Alert, Modal, TextInput, Tabs } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
-import { IconArrowLeft, IconPhone, IconMail, IconCake, IconPencil, IconUser, IconReceipt, IconCalendar } from '@tabler/icons-react';
-
+import { IconArrowLeft, IconPhone, IconMail, IconCake, IconPencil, IconUser, IconReceipt, IconCalendar, IconLock } from '@tabler/icons-react';
+import StudentAccount from '../components/StudentAccount';
 
 interface Student {
   id: string;
@@ -17,6 +17,7 @@ interface Student {
   phone?: string;
   email?: string;
   dob?: Date | null;
+  uid?: string;
 }
 
 export default function StudentDetailView() {
@@ -159,6 +160,7 @@ export default function StudentDetailView() {
           <Tabs.Tab value="details" leftSection={<IconUser size={14} />}>Details</Tabs.Tab>
           <Tabs.Tab value="attendance" leftSection={<IconCalendar size={14} />}>Attendance</Tabs.Tab>
           <Tabs.Tab value="fees" leftSection={<IconReceipt size={14} />}>Fees</Tabs.Tab>
+          <Tabs.Tab value="account" leftSection={<IconLock size={14} />}>Account</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="details">
@@ -181,12 +183,22 @@ export default function StudentDetailView() {
 
         <Tabs.Panel value="attendance">
           {/* <Attendance /> */}
-          <Text mt="md">Attendance module.</Text>
+          <Text mt="md">Attendance module coming soon.</Text>
         </Tabs.Panel>
 
         <Tabs.Panel value="fees">
           {/* <Fees /> */}
-          <Text mt="md">Fees module.</Text>
+          <Text mt="md">Fees module coming soon.</Text>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="account">
+          {student && (
+            <StudentAccount 
+              studentId={student.id} 
+              studentEmail={student.email} 
+              hasAccount={!!student.uid} 
+            />
+          )}
         </Tabs.Panel>
       </Tabs>
 

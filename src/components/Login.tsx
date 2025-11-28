@@ -6,7 +6,7 @@ import './Login.css';
 import logo from '../assets/LOGO1.png';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Use identifier instead of email
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -14,6 +14,12 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+   
+    let email = identifier;
+    if (!identifier.includes('@')) {
+      email = `${identifier}@trackedu.local`;
+    }
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -24,10 +30,10 @@ const Login: React.FC = () => {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
-          setError("Invalid email or password.");
+          setError("Invalid username/email or password.");
           break;
         case 'auth/invalid-email':
-          setError("Please enter a valid email address.");
+          setError("Please enter a valid username or email address.");
           break;
         case 'auth/network-request-failed':
           setError("Network error. Please check your connection.");
@@ -46,13 +52,13 @@ const Login: React.FC = () => {
         <h2>TRACKEDU LOGIN</h2>
         <form onSubmit={handleLogin}>
           <div className="input-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="identifier">Username or Email</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="identifier"
+              name="identifier"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
             />
           </div>

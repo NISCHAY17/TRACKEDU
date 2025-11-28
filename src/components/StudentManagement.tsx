@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, runTransaction, Timestamp } from 'firebase/firestore';
-import { Table, Button, Modal, TextInput, Group, Title, Select, ActionIcon, Anchor } from '@mantine/core';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, runTransaction } from 'firebase/firestore';
+import { Table, Button, Modal, TextInput, Group, Title, Select, ActionIcon } from '@mantine/core';
 import { useForm, type FormErrors } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { DatePickerInput } from '@mantine/dates';
 import { IconTrash, IconEye } from '@tabler/icons-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 // Interfaces
 interface Student { id: string; name: string; studentId: string; class: string; phone?: string; email?: string; dob?: Date | null; }
@@ -35,7 +35,8 @@ export default function StudentManagement() {
         if (values.class.length < 1) {
             errors.class = 'Class is required';
         }
-        if (!/^\S+@\S+$/.test(values.email)) {
+        // Email is optional now. Only validate if not empty.
+        if (values.email && values.email.trim() !== '' && !/^\S+@\S+$/.test(values.email)) {
             errors.email = 'Invalid email';
         }
         if (idScheme && !idScheme.useScheme && !isEditing && values.studentId.trim() === '') {
@@ -55,13 +56,10 @@ export default function StudentManagement() {
         // Robust date parsing
         if (data.dob) {
             if (typeof data.dob.toDate === 'function') {
-
                 dob = data.dob.toDate();
             } else if (data.dob instanceof Date) {
-          
                 dob = data.dob;
             } else if (typeof data.dob === 'string' || typeof data.dob === 'number') {
-          
                 dob = new Date(data.dob);
             }
         }
@@ -91,15 +89,9 @@ export default function StudentManagement() {
       setSelectedStudent(null);
       form.reset();
       if (idScheme?.useScheme) {
-        if (!idScheme.prefix) {
-          notifications.show({
-            title: 'Configuration Required',
-            message: <>Please <Anchor component={Link} to="/manage">set a prefix</Anchor> for the student ID scheme first.</>,
-            color: 'red',
-          });
-          return;
-        }
-        form.setFieldValue('studentId', `${idScheme.prefix}${idScheme.nextId}`);
+        // Removed the check for prefix existence
+        const prefix = idScheme.prefix || ''; // Default to empty string if prefix is null/undefined
+        form.setFieldValue('studentId', `${prefix}${idScheme.nextId}`);
       }
     }
     setOpened(true);
@@ -116,9 +108,11 @@ export default function StudentManagement() {
           await runTransaction(db, async (transaction) => {
             const schemeRef = doc(db, 'config', 'studentIdScheme');
             const schemeDoc = await transaction.get(schemeRef);
-            if (!schemeDoc.exists() || !schemeDoc.data().prefix) throw new Error("Student ID scheme not configured!");
+            // Relaxed check: Only throw if document doesn't exist, not if prefix is missing
+            if (!schemeDoc.exists()) throw new Error("Student ID scheme not configured!"); 
             const scheme = schemeDoc.data();
-            const newStudentId = `${scheme.prefix}${scheme.nextId}`;
+            const prefix = scheme.prefix || ''; // Handle missing prefix gracefully
+            const newStudentId = `${prefix}${scheme.nextId}`;
             const newStudentRef = doc(collection(db, "students"));
             transaction.set(newStudentRef, { ...values, studentId: newStudentId });
             transaction.update(schemeRef, { nextId: scheme.nextId + 1 });
@@ -184,7 +178,7 @@ export default function StudentManagement() {
           />
           <DatePickerInput label="Date of Birth" {...form.getInputProps('dob')} mt="md" />
           <TextInput label="Phone" {...form.getInputProps('phone')} mt="md" />
-          <TextInput label="Email" {...form.getInputProps('email')} required mt="md" />
+          <TextInput label="Email" {...form.getInputProps('email')} mt="md" /> {/* Removed required prop */}
 
           <Button type="submit" mt="lg">{isEditing ? 'Update' : 'Add'} Student</Button>
         </form>
