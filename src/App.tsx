@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import ClassManagement from './components/ClassManagement';
 import StudentManagement from './components/StudentManagement';
 import TeacherManagement from './components/TeacherManagement'; 
+import NoticeBoard from './components/NoticeBoard'; 
 import StudentDetail from './pages/StudentDetailView';
 import ClassDetail from './pages/ClassDetailView'; 
 import Manage from './components/Manage';
@@ -50,7 +51,7 @@ function App() {
         <Group h="100%" px="md">
           <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
           <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
-          <img src={logo} alt="TrackEdu" style={{ height: 30 }} /> {/* Add logo image */}
+          <img src={logo} alt="TrackEdu" style={{ height: 30 }} /> 
           <Title order={3}>Admin Dashboard</Title>
         </Group>
       </AppShell.Header>
@@ -81,7 +82,7 @@ function App() {
           <Route path="/students/:id" element={<StudentDetail />} />
           <Route path="/manage" element={<Manage />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/notice-board" element={<Center><Title>Notice Board Coming Soon</Title></Center>} /> 
+          <Route path="/notice-board" element={<NoticeBoard />} /> 
         </Routes>
       </AppShell.Main>
     </AppShell>
