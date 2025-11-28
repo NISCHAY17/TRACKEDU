@@ -2,7 +2,7 @@
 
 # TrackEdu 🧠
 
-<img src="public/LOGOPROB.png" width="500" alt="Logo" />
+<img src="public/LOGOPROB.png" width="100" alt="Logo" />
 
 **An open-source student management & tracking platform.**
 
@@ -19,6 +19,8 @@ Want to see it in action? Check out the live demo!
 **Demo Credentials:**
 *   **Email / ID:** `demo@trackedu.demo`
 *   **Password:** `demo@trackedu.demo`
+
+<img src="public/Screenshot 2025-11-29 005030.png" width="800" alt="Dashboard Screenshot" />
 
 ---
 
@@ -95,6 +97,19 @@ We are actively working on the following features:
     ```bash
     npm run dev
     ```
+
+---
+
+## 🚀 Deployment & Customization
+
+Want to deploy TrackEdu to your own domain or customize the branding?
+
+👉 **[Read the Full Deployment Guide (DEPLOY.md)](DEPLOY.md)**
+
+This guide covers:
+*   Detailed Firebase setup instructions.
+*   How to change the logo and colors.
+*   Step-by-step deployment to Firebase Hosting.
 
 ---
 
