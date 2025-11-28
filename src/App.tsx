@@ -1,12 +1,14 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AppShell, Burger, Group, NavLink, Title, Center, Loader } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconHome, IconChalkboard, IconUsers } from '@tabler/icons-react';
+import { IconHome, IconChalkboard, IconUsers, IconClipboardText, IconListDetails, IconSettings } from '@tabler/icons-react';
 import Dashboard from './components/Dashboard';
 import ClassManagement from './components/ClassManagement';
 import StudentManagement from './components/StudentManagement';
 import StudentDetail from './pages/StudentDetailView';
 import ClassDetail from './pages/ClassDetailView'; 
+import Manage from './components/Manage';
+import Settings from './components/Settings';
 import Login from './components/Login';
 import SignUp from './components/SignUp';
 import { auth } from './firebase';
@@ -14,29 +16,55 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 
 function App() {
   const [user, loading] = useAuthState(auth);
-  const [opened, { toggle }] = useDisclosure();
+  const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
+  const location = useLocation();
 
   if (loading) {
     return <Center style={{ height: '100vh' }}><Loader size="xl" /></Center>;
   }
 
+  const navLinks = [
+    { icon: IconHome, label: 'Dashboard', path: '/' },
+    { icon: IconChalkboard, label: 'Classes', path: '/classes' },
+    { icon: IconUsers, label: 'Students', path: '/students' },
+    { icon: IconClipboardText, label: 'Notice Board', path: '/notice-board' },
+    { icon: IconListDetails, label: 'Manage', path: '/manage' },
+    { icon: IconSettings, label: 'Settings', path: '/settings' },
+  ];
+
   const privateRoutes = (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 250, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{
+        width: 250,
+        breakpoint: 'sm',
+        collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
+      }}
       padding="md"
     >
       <AppShell.Header>
         <Group h="100%" px="md">
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+          <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
+          <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
           <Title order={3}>Admin Dashboard</Title>
         </Group>
       </AppShell.Header>
 
       <AppShell.Navbar p="md">
-        <NavLink component={Link} to="/" label="Dashboard" leftSection={<IconHome size="1rem" stroke={1.5} />} />
-        <NavLink component={Link} to="/classes" label="Class Management" leftSection={<IconChalkboard size="1rem" stroke={1.5} />} />
-        <NavLink component={Link} to="/students" label="Student Management" leftSection={<IconUsers size="1rem" stroke={1.5} />} />
+        {navLinks.map((link) => (
+            <NavLink 
+                key={link.path}
+                component={Link} 
+                to={link.path} 
+                label={link.label} 
+                leftSection={<link.icon size="1rem" stroke={1.5} />} 
+                active={location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path))}
+                onClick={() => {
+                    if (mobileOpened) toggleMobile();
+                }}
+            />
+        ))}
       </AppShell.Navbar>
 
       <AppShell.Main>
@@ -46,25 +74,26 @@ function App() {
           <Route path="/classes/:id" element={<ClassDetail />} /> 
           <Route path="/students" element={<StudentManagement />} />
           <Route path="/students/:id" element={<StudentDetail />} />
+          <Route path="/manage" element={<Manage />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/notice-board" element={<Center><Title>Notice Board Coming Soon</Title></Center>} /> 
         </Routes>
       </AppShell.Main>
     </AppShell>
   );
 
   return (
-    <Router>
-      <Routes>
-        {!user ? (
-          <>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="*" element={<Navigate to="/login" />} />
-          </>
-        ) : (
-          <Route path="/*" element={privateRoutes} />
-        )}
-      </Routes>
-    </Router>
+    <Routes>
+      {!user ? (
+        <>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </>
+      ) : (
+        <Route path="/*" element={privateRoutes} />
+      )}
+    </Routes>
   );
 }
 
