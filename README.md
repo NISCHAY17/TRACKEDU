@@ -2,7 +2,7 @@
 
 # TrackEdu 🧠
 
-<img src="public/LOGOPROB.png" width="100" alt="Logo" />
+<img src="public/LOGOPROB.png" width="500" alt="Logo" />
 
 **An open-source student management & tracking platform.**
 
