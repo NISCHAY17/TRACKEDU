@@ -12,7 +12,8 @@ const DashboardHome = () => <Title>Welcome to TrackEdu</Title>;
 const NoticeBoard = () => <Title>Notice Board</Title>;
 
 export default function Dashboard() {
-  const [opened, { toggle }] = useDisclosure();
+  const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
+  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
   const location = useLocation();
 
   const navLinks = [
@@ -27,12 +28,17 @@ export default function Dashboard() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      navbar={{
+        width: 300,
+        breakpoint: 'sm',
+        collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
+      }}
       padding="md"
     >
       <AppShell.Header>
         <Group h="100%" px="md">
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+          <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
+          <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
           <Title>TrackEdu Admin</Title>
         </Group>
       </AppShell.Header>
@@ -47,7 +53,10 @@ export default function Dashboard() {
               component={Link}
               to={link.path}
               active={location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path))}
-              onClick={toggle}
+              onClick={() => {
+                  // Close mobile menu on navigation
+                  if (mobileOpened) toggleMobile();
+              }}
             />
           ))}
         </AppShell.Section>
